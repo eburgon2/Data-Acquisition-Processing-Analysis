@@ -2,14 +2,15 @@ name: hyriver
 channels:
   - conda-forge
 dependencies:
-  - python=3.10
-  - py3dep
-  - pynhd
-  - pygeohydro
-  - pynldas2
+  - contextily
   - dataretrieval
   - geopandas
   - ipykernel
-  - contextily
   - nbformat
-
+  - py3dep
+  - pygeohydro
+  - pynhd
+  - pynldas2
+  - python=3.10
+  - pydaymet[version='>=0.13.7']
+  - earthaccess
