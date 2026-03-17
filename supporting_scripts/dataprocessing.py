@@ -32,7 +32,7 @@ def processSNOTEL(site, stateab, WYOI):
         wydf = wydf[cols]
         wydf.rename(columns = {'Snow Water Equivalent (m) Start of Day Values':f"{WY}_SWE_m"}, inplace=True)
         wydf.reset_index(inplace=True, drop=True)
-        WYsitedf[f"{WY}_SWE_in"] = wydf[f"{WY}_SWE_m"]*39.3701 #converting m to inches (standard for snotel)
+        WYsitedf[f"{WY}_SWE_in"] = wydf[f"{WY}_SWE_m"]#*39.3701 #converting m to inches (standard for snotel)
 
         if len(wydf) == 365:
             try:
@@ -73,7 +73,7 @@ def processSNOTEL(site, stateab, WYOI):
     # df.insert(1,'D',WYsitedf['D'])
 
     # Convert to datetime format
-    df['date'] = pd.to_datetime(dict(year = 2023, month = df['M'], day = df['D'])) 
+    df['date'] = pd.to_datetime(dict(year = 2024, month = df['M'], day = df['D'])) 
 
     # Format the date
     df['M-D'] = df['date'].dt.strftime('%m-%d')
@@ -97,7 +97,7 @@ def Spatial_median_SWE_df(output_res, basinname, begdate, enddate, filename, dec
         df['M'] = int(file[-12:-10])
         df['D'] = int(file[-10:-8])
         #convert m to in to be consistent with SNOTEL
-        df['swe_in'] = df['swe_m'] * 39.3701
+        df['swe_in'] = df['swe_m'] #* 39.3701
         locations = []
         for index, row in df.iterrows():
             location = f"{basinname}_{output_res}M_{round(row['cen_lat'],decround)}_{round(row['cen_lon'],decround)}"
@@ -117,7 +117,7 @@ def Spatial_median_SWE_df(output_res, basinname, begdate, enddate, filename, dec
         # if len(locationDF) > 3:
         #     display(locationDF)
 
-    SWE_tempDF['median_SWE_in'] = SWE_tempDF['median_SWE_m'] * 39.3701
+    SWE_tempDF['median_SWE_in'] = SWE_tempDF['median_SWE_m'] #* 39.3701
 
     #round lat and lon to desired decimal places
     SWE_tempDF['cen_lat'] = SWE_tempDF['cen_lat'].round(decround)
@@ -164,7 +164,7 @@ def SWE_diff(basinname, output_res, medianSWEfile, WYSWEfile, decround, swedifff
     yeardf.set_index('location', inplace = True)
     dropcols = ['cen_lat', 'cen_lon', 'cell_id']
     yeardf = yeardf.drop(columns = dropcols)
-    yeardf['swe_in'] = yeardf['swe_m'] * 39.3701
+    yeardf['swe_in'] = yeardf['swe_m'] #* 39.3701
 
     #Add median SWE to the year of interest
     df = pd.concat([yeardf, MedianSWE_df], axis = 1)
@@ -175,7 +175,7 @@ def SWE_diff(basinname, output_res, medianSWEfile, WYSWEfile, decround, swedifff
 
     #Calculate the difference between the median SWE and the year of interest
     df['SWE_diff_in'] = df['swe_in'] - df['median_SWE_in']
-    df['SWE_diff_m'] = df['SWE_diff_in'] / 39.3701
+    df['SWE_diff_m'] = df['SWE_diff_in'] #/ 39.3701
     Perc = []
     for index, row in df.iterrows():
             
