@@ -282,6 +282,52 @@ def get_NLDAS_daily(basin_polygon_coords, begin_date='2025-01-01', end_date=None
     
     return df
 
+
+def get_land(basin_polygon_coords, begin_date='2014-01-01', end_date='2016-01-10'):
+    #EE only needs to import in the function that is being called, so we can import it here to avoid issues with the other functions that are not being called in this script
+    import ee
+    print("Authenticating with Earth Engine...")
+    ee.Authenticate()
+    print("Initializing Earth Engine...")
+    ee.Initialize()
+    print("Earth Engine initialized successfully.")
+    
+    basin_polygon = ee.Geometry.Polygon(basin_polygon_coords)
+    
+    if end_date is None:
+        end_date = datetime.datetime.today().strftime('%Y-%m-%d')
+    
+    # Load Hourly
+    nldas_hourly = (ee.ImageCollection("ECMWF/ERA5/DAILY")
+                    .filterBounds(basin_polygon)
+                    .filterDate(begin_date, end_date))
+    
+    # Setup Date Math
+    start = ee.Date(begin_date)
+    end = ee.Date(end_date)
+    diff = end.difference(start, 'day')
+    day_list = ee.List.sequence(0, diff.subtract(1))
+    
+    # Map Daily Aggregation
+    daily_func = wrap_make_daily(nldas_hourly, start)
+    daily_collection = ee.ImageCollection.fromImages(day_list.map(daily_func))
+    
+    # Map Spatial Reduction
+    results = daily_collection.map(lambda img: get_all_metrics(img, basin_polygon)).getInfo()
+    
+    df = pd.DataFrame([f['properties'] for f in results['features']]) 
+    
+    # Reorder columns to put date first
+    cols = ['date'] + [c for c in df.columns if c != 'date']
+    df = df[cols]
+    
+    df['date'] = df['date'].str.split('T').str[0]
+    df['date'] = pd.to_datetime(df['date'])
+    df.rename(columns={'date':'Date'}, inplace=True)
+    df.set_index('Date', drop = True, inplace = True)
+    
+    return df
+    
 #Temporal Reduction Wrapper (The "Outer" Function)
 def wrap_make_daily(collection, start_date):
     def make_daily(day_offset):
